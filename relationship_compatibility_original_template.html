@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Three-Party Relationship Compatibility Test</title>
+<style>
+*{box-sizing:border-box}
+:root{
+  --blue:#0b56b5;--ink:#111;--paper:#fff;--bg:#cfcfcf;
+  --a:#d9ead3;--b:#cfe2f3;--c:#fce5cd;--warn:#fff2cc;--bad:#f4cccc;
+}
+body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:var(--ink);font-size:9px}
+.toolbar{position:sticky;top:0;z-index:100;background:#111;color:#fff;padding:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12px}
+button{font-weight:800;border:1px solid #111;border-radius:6px;background:#fff;padding:7px 10px;font-size:11px;cursor:pointer}
+.toolbar button{border-color:#fff}
+.page{width:8.5in;min-height:14in;margin:12px auto;background:#fff;padding:.24in .32in;border:2px solid #111;box-shadow:0 2px 10px #777;position:relative;page-break-after:always}
+@page{size:legal portrait;margin:.15in}
+@media print{
+ body{background:#fff}.toolbar,.no-print{display:none!important}
+ .page{margin:0!important;border:0!important;box-shadow:none!important;width:8.5in!important;height:13.35in!important;min-height:0!important;overflow:hidden!important;break-after:page;page-break-after:always}
+ .page:last-of-type{break-after:auto;page-break-after:auto}
+}
+.marks:before,.marks:after{content:"";position:absolute;top:.08in;bottom:.08in;width:.06in;background:repeating-linear-gradient(to bottom,#111 0 .05in,transparent .05in,transparent .14in)}
+.marks:before{left:.06in}.marks:after{right:.06in}
+.top{display:grid;grid-template-columns:.78in 1fr 1.35in;gap:6px;align-items:start}
+.logo{width:.62in;height:.62in;border:3px solid #111;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;margin:auto}
+h1{font-size:22px;line-height:.95;margin:0;text-align:center}
+.subtitle{text-align:center;font-weight:800;font-size:8.5px}
+.idbox{border:1px solid #111;text-align:center;padding:4px;font-size:7.2px}
+.cells{display:flex;gap:1px;justify-content:center;margin:3px 0}.cell{width:10px;height:13px;border:1px solid #111}
+.bar{background:var(--blue);color:#fff;text-align:center;border-radius:4px;font-weight:900;padding:4px;margin:5px 0;font-size:10px}
+.box{border:1.2px solid #111;margin-bottom:5px;padding:5px}.box h2{font-size:10px;margin:0 0 4px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:5px}.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px}
+.row{display:flex;gap:4px;align-items:center;margin:2px 0}
+input[type=text],textarea,select{border:0;border-bottom:1px solid #111;background:transparent;font:inherit;padding:2px}
+.row input,.row select{flex:1}textarea{width:100%;height:38px;border:1px solid #777;resize:vertical}
+.note{background:#fff7d6;border:1px solid #c9ac55;padding:5px}
+.scalehead,.scanrow{display:grid;grid-template-columns:2.65in repeat(3,.58in) .52in;gap:2px;align-items:center}
+.scalehead{font-size:7px;text-align:center;font-weight:900;background:#eee;border:1px solid #aaa;padding:2px}
+.scanrow{min-height:27px;border-bottom:1px solid #ddd;line-height:1.08}
+.scanrow:nth-child(even){background:#fafafa}
+.score{width:100%;border:1px solid #aaa;background:#fff;font-size:8px}
+.conf{width:100%;border:1px solid #aaa;background:#fff;font-size:8px}
+.levelTitle{background:#f1f1f1;border:1px solid #aaa;font-weight:900;padding:3px;margin-top:4px;font-size:8px}
+.tag{float:right;color:#555;font-size:6.2px}.locked{opacity:.85}.stageNote{font-size:7px;font-weight:800;padding:3px;border:1px solid #999;background:#fafafa;margin:3px 0}
+.badge{display:inline-block;border:1px solid #777;border-radius:10px;padding:1px 5px;font-size:6.5px;font-weight:800;margin-left:3px}
+.partyA{background:var(--a)}.partyB{background:var(--b)}.partyC{background:var(--c)}
+.footer{position:absolute;bottom:.07in;left:.32in;right:.32in;display:flex;justify-content:space-between;font-size:7px}
+.small{font-size:7px}.hidden{display:none!important}
+.metric{display:grid;grid-template-columns:1.65in .8in 1fr;gap:5px;border-bottom:1px solid #ccc;padding:4px 0;font-size:10px}
+.pill{border:1px solid #111;border-radius:12px;padding:3px 5px;text-align:center;font-weight:900}
+.good{background:var(--a)}.mid{background:var(--warn)}.poor{background:var(--bad)}
+.reportText{font-size:10px;line-height:1.35}
+.driverGrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px}
+.driverCard{border:1px solid #999;padding:5px;background:#fafafa}.driverCard h3{font-size:9px;margin:0 0 3px}
+.smalltable{width:100%;border-collapse:collapse;font-size:8px}.smalltable td,.smalltable th{border:1px solid #999;padding:3px}
+.legend{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:4px 0}
+.legend span{border:1px solid #777;border-radius:10px;padding:2px 7px;font-weight:800}
+.codebox{width:100%;height:82px;font-family:monospace;font-size:7px;border:1px solid #777}
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <button onclick="window.print()">Print / Save PDF</button>
+  <button onclick="commitPartyB()">Commit Party B</button>
+  <button onclick="commitReviewer()">Commit Party C Review</button>
+  <button onclick="scoreAssessment()">Score Test</button>
+  <button onclick="createDataBlock()">Create Data Block</button>
+  <button onclick="importData()">Import Data</button>
+  <button onclick="clearParticipantData()">Clear B/C</button>
+  <span>Relationship compatibility test · 60 questions · Locked Party A baseline</span>
+</div>
+
+<section class="page marks">
+  <div class="top">
+    <div><div class="logo">3P</div></div>
+    <div>
+      <h1>THREE-PARTY RELATIONSHIP COMPATIBILITY TEST</h1>
+      <div class="subtitle">LOCKED BASELINE · INDEPENDENT PARTNER RESPONSE · THIRD-PARTY REVIEW</div>
+      <div class="subtitle">LEVELS: BOUNDARIES · INTIMACY · SHARED LIFE · SUPPORT · VALUES</div>
+    </div>
+    <div class="idbox">TEST ID<div class="cells"><span class="cell"></span><span class="cell"></span><span class="cell"></span><span class="cell"></span><span class="cell"></span><span class="cell"></span></div>FORM RC-60 / 1.0<br>PAGE 1 / 4</div>
+  </div>
+  <div class="bar">PARTICIPANT IDENTIFICATION AND RELATIONSHIP CONTEXT</div>
+  <div class="grid2">
+    <div class="box">
+      <h2>A. RELATIONSHIP CONTEXT</h2>
+      <div class="row">Assessment:<input id="chosenOption" type="text" value="Relationship / dating compatibility" readonly></div>
+      <div class="row">Relationship / situation:<input id="decision" type="text" placeholder="dating / early relationship / established relationship"></div>
+      <div class="row">Time horizon:<input id="horizon" type="text" placeholder="current / long-term"></div>
+      <textarea id="notes" placeholder="Optional neutral context, facts, constraints, or assumptions."></textarea>
+    </div>
+    <div class="box">
+      <h2>B. THREE PARTIES</h2>
+      <div class="row partyA">Party A — Locked baseline:<input id="partyAName" type="text" placeholder="name or role"></div>
+      <div class="row partyB">Party B — Partner / date:<input id="partyBName" type="text" placeholder="person / employer / business"></div>
+      <div class="row partyC">Party C — Independent reviewer:<input id="partyCName" type="text" placeholder="public / regulator / community"></div>
+      <div class="row">Assessment note:<input id="facilitator" type="text"></div>
+    </div>
+  </div>
+  <div class="box note">
+      <h2>C. INSTRUCTIONS</h2>
+      <p><b>Party A is already completed and locked.</b> Party B answers each relationship preference independently using the row's printed 1–5 scale.</p>
+      <p>After Party B finishes, press <b>Commit Party B</b>. Party B answers then lock. Party C reviews each A/B pairing using: <b>1</b> major incompatibility · <b>2</b> significant concern · <b>3</b> workable with discussion · <b>4</b> likely compatible · <b>5</b> strong fit.</p>
+      <p>The <b>IMP.</b> column is Party A's baseline importance: <b>1</b> low · <b>2</b> important · <b>3</b> high/core. Party C cannot review until Party B is committed.</p>
+      <p>Final scoring weights direct A↔B compatibility at <b>80%</b> and Party C's independent workability review at <b>20%</b>. Consent, safety, and explicit requests to stop contact override any score.</p>
+    </div>
+  <div class="legend">
+    <span class="partyA">PARTY A — LOCKED BASELINE</span><span class="partyB">PARTY B — PARTNER / DATE</span><span class="partyC">PARTY C — REVIEWER</span>
+  </div>
+  <div class="box">
+    <h2>D. LEVEL 1 — CONNECTION & BOUNDARIES (ITEMS 1–12)</h2>
+    <div class="scalehead"><b>NODE</b><b>A</b><b>B</b><b>C</b><b>IMP.</b></div>
+    <div id="level1"></div>
+  </div>
+  <div class="footer"><b>THREE-PARTY RELATIONSHIP COMPATIBILITY TEST</b><span>PAGE 1 / 4</span></div>
+</section>
+
+<section class="page marks">
+  <div class="top"><div><div class="logo">3P</div></div><div><h1>THREE-PARTY RELATIONSHIP COMPATIBILITY TEST</h1><div class="subtitle">LEVELS 2–3</div></div><div class="idbox">PAGE 2 / 4</div></div>
+  <div class="bar">RELATIONSHIP COMPATIBILITY INVENTORY</div>
+  <div class="box">
+    <h2>E. LEVEL 2 — COMMUNICATION & INTIMACY (ITEMS 13–24)</h2>
+    <div class="scalehead"><b>NODE</b><b>A</b><b>B</b><b>C</b><b>IMP.</b></div>
+    <div id="level2"></div>
+  </div>
+  <div class="box">
+    <h2>F. LEVEL 3 — COMMITMENT & SHARED LIFE (ITEMS 25–36)</h2>
+    <div class="scalehead"><b>NODE</b><b>A</b><b>B</b><b>C</b><b>IMP.</b></div>
+    <div id="level3"></div>
+  </div>
+  <div class="footer"><b>FORM RC-60 / 1.0</b><span>PAGE 2 / 4</span></div>
+</section>
+
+<section class="page marks">
+  <div class="top"><div><div class="logo">3P</div></div><div><h1>THREE-PARTY RELATIONSHIP COMPATIBILITY TEST</h1><div class="subtitle">LEVELS 4–5</div></div><div class="idbox">PAGE 3 / 4</div></div>
+  <div class="bar">SOCIAL SUPPORT, VALUES, AND LONG-TERM FIT</div>
+  <div class="box">
+    <h2>G. LEVEL 4 — SOCIAL, HOME & SUPPORT (ITEMS 37–48)</h2>
+    <div class="scalehead"><b>NODE</b><b>A</b><b>B</b><b>C</b><b>IMP.</b></div>
+    <div id="level4"></div>
+  </div>
+  <div class="box">
+    <h2>H. LEVEL 5 — VALUES & FUTURE (ITEMS 49–60)</h2>
+    <div class="scalehead"><b>NODE</b><b>A</b><b>B</b><b>C</b><b>IMP.</b></div>
+    <div id="level5"></div>
+  </div>
+  <div class="box note">
+    <h2>I. COMPATIBILITY REVIEW NOTES</h2>
+    <div class="grid3">
+      <div><b>Party A core boundary / minimum</b><textarea id="minA" readonly>Complete romantic/sexual exclusivity; explicit requests to stop calling or texting must be respected.</textarea></div>
+      <div><b>Party B core boundary / minimum</b><textarea id="minB"></textarea></div>
+      <div><b>Party C reviewer summary</b><textarea id="minC"></textarea></div>
+    </div>
+    <div class="row">Discussion point / safeguard / compromise:<input id="compromise" type="text"></div>
+  </div>
+  <div class="footer"><b>FORM RC-60 / 1.0</b><span>PAGE 3 / 4</span></div>
+</section>
+
+<section class="page marks" id="results-page">
+  <div class="top"><div><div class="logo">3P</div></div><div><h1>THREE-PARTY COMPATIBILITY REPORT</h1><div class="subtitle">ALIGNMENT · DIFFERENCES · REVIEW · SAFEGUARDS</div></div><div class="idbox">PAGE 4 / 4</div></div>
+  <div class="bar">AUTOMATED COMPATIBILITY SUMMARY</div>
+  <div class="box">
+    <h2>J. OVERALL COMPATIBILITY METRICS</h2>
+    <div id="metrics" class="reportText">Party B must answer and commit, then Party C must review and commit before scoring.</div>
+  </div>
+  <div class="box">
+    <h2>K. LEVEL-BY-LEVEL COMPATIBILITY</h2>
+    <div id="levelResults"></div>
+  </div>
+  <div class="box">
+    <h2>L. STRONGEST ALIGNMENTS AND IMPORTANT GAPS</h2>
+    <div id="drivers"></div>
+  </div>
+  <div class="box">
+    <h2>M. INTERPRETATION</h2>
+    <div id="interpretation" class="reportText">No compatibility score calculated yet.</div>
+  </div>
+  <div class="box no-print">
+    <h2>N. PORTABLE DATA BLOCK</h2>
+    <textarea id="dataBlock" class="codebox" placeholder="Use Create Data Block, or paste a saved block here and press Import Data."></textarea>
+  </div>
+  <div class="footer"><b>FORM RC-60 / 1.0</b><span>PAGE 4 / 4</span></div>
+</section>
+
+<script>
+const MODEL = [{"Level": 1, "LevelTheme": "Connection & Boundaries", "Node": "See each other ideally", "Scale": "1=rarely · 5=daily", "ABaseline": 5, "Importance": 2}, {"Level": 1, "LevelTheme": "Connection & Boundaries", "Node": "Contact while apart", "Scale": "1=little · 5=near-continuous", "ABaseline": 4, "Importance": 2}, {"Level": 1, "LevelTheme": "Connection & Boundaries", "Node": "Non-sexual physical affection", "Scale": "1=little · 5=very high", "ABaseline": 4, "Importance": 2}, {"Level": 1, "LevelTheme": "Connection & Boundaries", "Node": "Independence / alone time", "Scale": "1=little · 5=very high", "ABaseline": 4, "Importance": 2}, {"Level": 1, "LevelTheme": "Connection & Boundaries", "Node": "Partner involved in social life", "Scale": "1=little · 5=highly", "ABaseline": 4, "Importance": 2}, {"Level": 1, "LevelTheme": "Connection & Boundaries", "Node": "Comfort with separate social life", "Scale": "1=not comfortable · 5=very", "ABaseline": 2, "Importance": 2}, {"Level": 1, "LevelTheme": "Connection & Boundaries", "Node": "Relationship transparency", "Scale": "1=little · 5=almost complete", "ABaseline": 4, "Importance": 3}, {"Level": 1, "LevelTheme": "Connection & Boundaries", "Node": "Personal privacy", "Scale": "1=little · 5=very high", "ABaseline": 4, "Importance": 2}, {"Level": 1, "LevelTheme": "Connection & Boundaries", "Node": "Romantic / sexual exclusivity", "Scale": "1=not required · 5=absolute", "ABaseline": 5, "Importance": 3}, {"Level": 1, "LevelTheme": "Connection & Boundaries", "Node": "Flirting with others acceptable", "Scale": "1=no · 5=yes", "ABaseline": 1, "Importance": 3}, {"Level": 1, "LevelTheme": "Connection & Boundaries", "Node": "Close emotional bond with possible attraction", "Scale": "1=no · 5=yes", "ABaseline": 1, "Importance": 3}, {"Level": 1, "LevelTheme": "Connection & Boundaries", "Node": "Conflict handled fairly and collaboratively", "Scale": "1=avoid · 5=fully collaborative", "ABaseline": 5, "Importance": 3}, {"Level": 2, "LevelTheme": "Communication & Intimacy", "Node": "Serious problems should be resolved", "Scale": "1=no · 5=must resolve", "ABaseline": 5, "Importance": 3}, {"Level": 2, "LevelTheme": "Communication & Intimacy", "Node": "Accountability after causing hurt", "Scale": "1=little · 5=full repair/change", "ABaseline": 5, "Importance": 3}, {"Level": 2, "LevelTheme": "Communication & Intimacy", "Node": "Forgive after real accountability/change", "Scale": "1=rarely · 5=completely", "ABaseline": 5, "Importance": 2}, {"Level": 2, "LevelTheme": "Communication & Intimacy", "Node": "Tell difficult truths voluntarily", "Scale": "1=no · 5=always", "ABaseline": 5, "Importance": 3}, {"Level": 2, "LevelTheme": "Communication & Intimacy", "Node": "Active, satisfying sex life", "Scale": "1=unimportant · 5=essential", "ABaseline": 5, "Importance": 3}, {"Level": 2, "LevelTheme": "Communication & Intimacy", "Node": "Ideal sexual frequency", "Scale": "1=low · 4=daily · 5=very high", "ABaseline": 5, "Importance": 2}, {"Level": 2, "LevelTheme": "Communication & Intimacy", "Node": "Sexual initiation balance", "Scale": "1=mostly me · 3=both · 5=partner", "ABaseline": 3, "Importance": 2}, {"Level": 2, "LevelTheme": "Communication & Intimacy", "Node": "Explore new things sexually, consensually", "Scale": "1=unimportant · 5=essential", "ABaseline": 5, "Importance": 3}, {"Level": 2, "LevelTheme": "Communication & Intimacy", "Node": "Affection continues without sex", "Scale": "1=unimportant · 5=essential", "ABaseline": 5, "Importance": 3}, {"Level": 2, "LevelTheme": "Communication & Intimacy", "Node": "Open communication about sex", "Scale": "1=unimportant · 5=essential", "ABaseline": 5, "Importance": 3}, {"Level": 2, "LevelTheme": "Communication & Intimacy", "Node": "Long-term commitment form", "Scale": "1=casual · 3=unsure · 5=marriage", "ABaseline": 3, "Importance": 1}, {"Level": 2, "LevelTheme": "Communication & Intimacy", "Node": "Live together long-term", "Scale": "1=no · 3=unsure · 5=yes", "ABaseline": 5, "Importance": 2}, {"Level": 3, "LevelTheme": "Commitment & Shared Life", "Node": "Want children", "Scale": "1=no · 3=unsure · 5=yes", "ABaseline": 5, "Importance": 3}, {"Level": 3, "LevelTheme": "Commitment & Shared Life", "Node": "Parenting responsibility balance", "Scale": "1=one mainly · 5=near 50/50 flex", "ABaseline": 5, "Importance": 3}, {"Level": 3, "LevelTheme": "Commitment & Shared Life", "Node": "How combined should finances be", "Scale": "1=separate · 5=fully combined", "ABaseline": 2, "Importance": 2}, {"Level": 3, "LevelTheme": "Commitment & Shared Life", "Node": "Partner financially responsible", "Scale": "1=unimportant · 5=essential", "ABaseline": 3, "Importance": 2}, {"Level": 3, "LevelTheme": "Commitment & Shared Life", "Node": "Partner has own goals / ambition", "Scale": "1=unimportant · 5=essential", "ABaseline": 3, "Importance": 2}, {"Level": 3, "LevelTheme": "Commitment & Shared Life", "Node": "Support partner's goals / sacrifices", "Scale": "1=not willing · 5=very willing", "ABaseline": 4, "Importance": 2}, {"Level": 3, "LevelTheme": "Commitment & Shared Life", "Node": "How joint are major decisions", "Scale": "1=one decides · 3=depends · 5=equal", "ABaseline": 3, "Importance": 1}, {"Level": 3, "LevelTheme": "Commitment & Shared Life", "Node": "Open to relocating for partner", "Scale": "1=no · 5=very open", "ABaseline": 4, "Importance": 2}, {"Level": 3, "LevelTheme": "Commitment & Shared Life", "Node": "Family involvement in relationship", "Scale": "1=none · 5=very involved", "ABaseline": 1, "Importance": 2}, {"Level": 3, "LevelTheme": "Commitment & Shared Life", "Node": "Friends influence relationship decisions", "Scale": "1=none · 3=some · 5=major", "ABaseline": 3, "Importance": 1}, {"Level": 3, "LevelTheme": "Commitment & Shared Life", "Node": "Comfort with partner's friends", "Scale": "1=unimportant · 5=essential", "ABaseline": 3, "Importance": 2}, {"Level": 3, "LevelTheme": "Commitment & Shared Life", "Node": "Attend social events together", "Scale": "1=rarely · 5=always", "ABaseline": 5, "Importance": 2}, {"Level": 4, "LevelTheme": "Social, Home & Support", "Node": "Partner goes to events without you", "Scale": "1=never · 2=rarely · 5=very often", "ABaseline": 2, "Importance": 2}, {"Level": 4, "LevelTheme": "Social, Home & Support", "Node": "Partner vacations without you", "Scale": "1=not comfortable · 5=very", "ABaseline": 2, "Importance": 2}, {"Level": 4, "LevelTheme": "Social, Home & Support", "Node": "Share hobbies / activities", "Scale": "1=almost none · 5=almost all", "ABaseline": 2, "Importance": 1}, {"Level": 4, "LevelTheme": "Social, Home & Support", "Node": "Personal space while living together", "Scale": "1=unimportant · 5=essential", "ABaseline": 3, "Importance": 2}, {"Level": 4, "LevelTheme": "Social, Home & Support", "Node": "Divide household responsibilities", "Scale": "1=one person · 5=by strengths/time", "ABaseline": 5, "Importance": 2}, {"Level": 4, "LevelTheme": "Social, Home & Support", "Node": "Similar cleanliness / home standards", "Scale": "1=unimportant · 5=essential", "ABaseline": 3, "Importance": 2}, {"Level": 4, "LevelTheme": "Social, Home & Support", "Node": "Partner reliability / follow-through", "Scale": "1=unimportant · 5=essential", "ABaseline": 3, "Importance": 2}, {"Level": 4, "LevelTheme": "Social, Home & Support", "Node": "Emotional support you receive", "Scale": "1=little · 5=very high", "ABaseline": 4, "Importance": 3}, {"Level": 4, "LevelTheme": "Social, Home & Support", "Node": "How involved you are supporting partner", "Scale": "1=little · 5=completely", "ABaseline": 4, "Importance": 2}, {"Level": 4, "LevelTheme": "Social, Home & Support", "Node": "Partner shares difficult feelings", "Scale": "1=unimportant · 5=essential", "ABaseline": 5, "Importance": 3}, {"Level": 4, "LevelTheme": "Social, Home & Support", "Node": "Reassurance when insecure", "Scale": "1=little · 5=very high", "ABaseline": 4, "Importance": 2}, {"Level": 4, "LevelTheme": "Social, Home & Support", "Node": "Regular appreciation", "Scale": "1=unimportant · 5=essential", "ABaseline": 3, "Importance": 2}, {"Level": 5, "LevelTheme": "Values & Future", "Node": "Intentional quality time", "Scale": "1=unimportant · 5=essential", "ABaseline": 3, "Importance": 1}, {"Level": 5, "LevelTheme": "Values & Future", "Node": "Fun / humour together", "Scale": "1=unimportant · 5=essential", "ABaseline": 2, "Importance": 1}, {"Level": 5, "LevelTheme": "Values & Future", "Node": "Partner willing to grow / change", "Scale": "1=unimportant · 5=essential", "ABaseline": 3, "Importance": 1}, {"Level": 5, "LevelTheme": "Values & Future", "Node": "Partner accepts you as you are", "Scale": "1=unimportant · 5=essential", "ABaseline": 5, "Importance": 3}, {"Level": 5, "LevelTheme": "Values & Future", "Node": "Respect maintained during conflict", "Scale": "1=unimportant · 5=absolute", "ABaseline": 4, "Importance": 3}, {"Level": 5, "LevelTheme": "Values & Future", "Node": "Comfort with recreational substance use", "Scale": "1=none · 2=social · 5=no preference", "ABaseline": 2, "Importance": 2}, {"Level": 5, "LevelTheme": "Values & Future", "Node": "Similar everyday lifestyle / routines", "Scale": "1=unimportant · 5=essential", "ABaseline": 3, "Importance": 2}, {"Level": 5, "LevelTheme": "Values & Future", "Node": "Similar core values / beliefs", "Scale": "1=unimportant · 5=essential", "ABaseline": 3, "Importance": 3}, {"Level": 5, "LevelTheme": "Values & Future", "Node": "Relationship priority", "Scale": "1=low · 4=top but balanced · 5=always top", "ABaseline": 4, "Importance": 3}, {"Level": 5, "LevelTheme": "Values & Future", "Node": "Actively plan future together", "Scale": "1=unimportant · 5=essential", "ABaseline": 3, "Importance": 2}, {"Level": 5, "LevelTheme": "Values & Future", "Node": "Work through difficult periods", "Scale": "1=not committed · 5=extremely", "ABaseline": 5, "Importance": 3}, {"Level": 5, "LevelTheme": "Values & Future", "Node": "Stop calling/texting if explicitly asked", "Scale": "1=continue · 5=stop unless re-initiated", "ABaseline": 5, "Importance": 3}];
+let STATE={bCommitted:false,cCommitted:false};
+
+function byId(id){return document.getElementById(id)}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function sortedModel(){return [...MODEL].sort((a,b)=>(a.Level-b.Level)||(a.Item-b.Item))}
+function selectHTML(id,cls,disabled=false,value=""){
+  return `<select id="${id}" class="score ${cls}" ${disabled?"disabled":""}>
+    <option value="">—</option><option value="1" ${String(value)==="1"?"selected":""}>1</option><option value="2" ${String(value)==="2"?"selected":""}>2</option><option value="3" ${String(value)==="3"?"selected":""}>3</option><option value="4" ${String(value)==="4"?"selected":""}>4</option><option value="5" ${String(value)==="5"?"selected":""}>5</option>
+  </select>`;
+}
+function renderInventory(){
+  for(let level=1;level<=5;level++){
+    const host=byId("level"+level);
+    const group=MODEL.filter(n=>n.Level===level);
+    host.innerHTML=group.map(n=>{
+      const i=n.Item-1;
+      return `<div class="scanrow" title="${esc(n.Question)}">
+        <div><b>${n.Item}.</b> ${esc(n.Node)} <span class="tag">${esc(n.Scale)}</span></div>
+        ${selectHTML("a"+i,"partyA locked",true,n.ABaseline)}
+        ${selectHTML("b"+i,"partyB",STATE.bCommitted)}
+        ${selectHTML("c"+i,"partyC",!STATE.bCommitted||STATE.cCommitted)}
+        <select id="conf${i}" class="conf locked" disabled><option>${n.Importance}</option></select>
+      </div>`;
+    }).join("");
+  }
+}
+function val(id){const e=byId(id); if(!e)return null; const v=e.value; return v===""?null:Number(v)}
+function mean(arr){const x=arr.filter(v=>v!=null);return x.length?x.reduce((a,b)=>a+b,0)/x.length:null}
+function fmt(v){return v==null?"—":v.toFixed(2)}
+function similarity(a,b){if(a==null||b==null)return null;return Math.max(0,100-Math.abs(a-b)*25)}
+
+function commitPartyB(){
+  const missing=MODEL.filter((n,i)=>val("b"+i)==null).length;
+  if(missing){alert(`Party B still has ${missing} unanswered question(s).`);return}
+  if(!confirm("Commit and lock Party B answers? Party C review will then be enabled."))return;
+  STATE.bCommitted=true; renderInventory(); alert("Party B answers committed and locked. Party C review is now enabled.");
+}
+function commitReviewer(){
+  if(!STATE.bCommitted){alert("Commit Party B first.");return}
+  const missing=MODEL.filter((n,i)=>val("c"+i)==null).length;
+  if(missing){alert(`Party C still has ${missing} unreviewed question(s).`);return}
+  if(!confirm("Commit and lock Party C review?"))return;
+  STATE.cCommitted=true; renderInventory(); alert("Party C review committed. The assessment can now be scored.");
+}
+function scoreAssessment(){
+  if(!STATE.bCommitted||!STATE.cCommitted){alert("Party B and Party C must both be committed before scoring.");return}
+  const records=[]; const levelStats={}; let weightSum=0, matchSum=0, reviewSum=0;
+  MODEL.forEach((n,i)=>{
+    const A=n.ABaseline,B=val("b"+i),C=val("c"+i),match=similarity(A,B),review=(C-1)*25,final=.8*match+.2*review,gap=Math.abs(A-B);
+    weightSum+=n.Importance;matchSum+=match*n.Importance;reviewSum+=review*n.Importance;
+    records.push({node:n.Node,question:n.Question,level:n.Level,theme:n.LevelTheme,A,B,C,match,review,final,gap,weight:n.Importance});
+    levelStats[n.Level]??={w:0,match:0,review:0,final:0,gaps:0};
+    let s=levelStats[n.Level];s.w+=n.Importance;s.match+=match*n.Importance;s.review+=review*n.Importance;s.final+=final*n.Importance;s.gaps+=gap;
+  });
+  const ab=matchSum/weightSum, cReview=reviewSum/weightSum, overall=.8*ab+.2*cReview;
+  const hard=records.filter(r=>r.weight===3&&r.gap>=3);
+  const status=overall>=80?"Very strong overall alignment":overall>=70?"Strong overall alignment":overall>=60?"Moderate compatibility with meaningful differences":overall>=50?"Mixed compatibility requiring substantial discussion":"Low compatibility across important preferences";
+  const cls=overall>=75?"good":overall>=55?"mid":"poor";
+  const metrics=[
+    ["Party A baseline","60/60","Embedded and locked before participant use."],
+    ["Party B completion","60/60",esc(byId("partyBName").value||"Partner / date")+" committed"],
+    ["Party C review","60/60",esc(byId("partyCName").value||"Independent reviewer")+" committed"],
+    ["A ↔ B preference match",`${Math.round(ab)}%`,"Importance-weighted direct preference alignment."],
+    ["Reviewer workability",`${Math.round(cReview)}%`,"Party C's independent 1–5 review converted to percent."],
+    ["Overall compatibility",`${Math.round(overall)}%`,status],
+    ["High-priority hard gaps",hard.length,"Importance 3 with a three- or four-point A/B difference."],
+    ["Scoring mix","80 / 20","80% A↔B match · 20% Party C review."]
+  ];
+  byId("metrics").innerHTML=metrics.map((m,i)=>`<div class="metric"><b>${m[0]}</b><span class="pill ${i===5?cls:""}">${m[1]}</span><span>${m[2]}</span></div>`).join("");
+  byId("levelResults").innerHTML=`<table class="smalltable"><thead><tr><th>Level</th><th>Theme</th><th>A↔B Match</th><th>C Review</th><th>Combined</th><th>Mean Gap</th></tr></thead><tbody>${
+    Object.keys(levelStats).map(k=>{const s=levelStats[k];return `<tr><td>${k}</td><td>${esc(MODEL.find(n=>n.Level==k).LevelTheme)}</td><td>${Math.round(s.match/s.w)}%</td><td>${Math.round(s.review/s.w)}%</td><td>${Math.round(s.final/s.w)}%</td><td>${(s.gaps/12).toFixed(2)}</td></tr>`}).join("")
+  }</tbody></table>`;
+  const align=records.filter(r=>r.match>=75).sort((a,b)=>(b.weight-a.weight)||(b.match-a.match)).slice(0,8);
+  const gaps=records.filter(r=>r.gap>=2).sort((a,b)=>(b.weight-a.weight)||(b.gap-a.gap)).slice(0,8);
+  const concerns=records.filter(r=>r.C<=2).sort((a,b)=>(a.C-b.C)||(b.weight-a.weight)).slice(0,8);
+  byId("drivers").innerHTML=`<div class="driverGrid">
+    <div class="driverCard"><h3>Strongest alignments</h3><ul>${align.length?align.map(r=>`<li>${esc(r.node)} (${Math.round(r.match)}%)</li>`).join(""):"<li>None</li>"}</ul></div>
+    <div class="driverCard"><h3>Important A/B gaps</h3><ul>${gaps.length?gaps.map(r=>`<li>${esc(r.node)} (A ${r.A} / B ${r.B})</li>`).join(""):"<li>None</li>"}</ul></div>
+    <div class="driverCard"><h3>Reviewer concerns</h3><ul>${concerns.length?concerns.map(r=>`<li>${esc(r.node)} (C ${r.C}/5)</li>`).join(""):"<li>None</li>"}</ul></div>
+  </div>`;
+  byId("interpretation").innerHTML=`
+    <p><b>Overall finding:</b> <span class="pill ${cls}">${status}</span></p>
+    <p>The importance-weighted direct Party A ↔ Party B match is <b>${Math.round(ab)}%</b>. Party C's workability review is <b>${Math.round(cReview)}%</b>. Combined compatibility is <b>${Math.round(overall)}%</b>.</p>
+    <p>Use the score to locate discussion areas, not to override either person's boundaries. Give special attention to importance-3 differences and any item Party C rated 1 or 2.</p>
+    <p><b>Contact boundary:</b> If either person explicitly asks the other to stop calling or texting, that request should be respected regardless of the score.</p>
+    <p><b>Interpretation limit:</b> This is a structured compatibility aid, not a clinical, legal, or scientific diagnostic.</p>`;
+  location.hash="results-page";
+}
+function collect(){
+  const answers={};
+  MODEL.forEach((n,i)=>answers[i]={A:n.ABaseline,B:byId("b"+i).value||null,C:byId("c"+i).value||null,importance:n.Importance});
+  return {
+    version:"RC60-1.0",state:STATE,
+    chosenOption:byId("chosenOption").value,decision:byId("decision").value,horizon:byId("horizon").value,notes:byId("notes").value,
+    partyAName:byId("partyAName").value,partyBName:byId("partyBName").value,partyCName:byId("partyCName").value,facilitator:byId("facilitator").value,
+    minA:byId("minA").value,minB:byId("minB").value,minC:byId("minC").value,compromise:byId("compromise").value,answers
+  };
+}
+function createDataBlock(){
+  const raw=JSON.stringify(collect());
+  const block="RC60-DATA:"+btoa(unescape(encodeURIComponent(raw)));
+  byId("dataBlock").value=block;alert("Portable compatibility data block created.");return block;
+}
+function importData(){
+  let raw=(byId("dataBlock").value||"").trim();
+  if(!raw)raw=prompt("Paste RC60 data block")||"";
+  raw=raw.replace("RC60-DATA:","");
+  if(!raw)return;
+  try{
+    const d=JSON.parse(decodeURIComponent(escape(atob(raw))));
+    if(d.version!=="RC60-1.0"){alert("This data block is from a different form version.");return}
+    ["decision","horizon","notes","partyAName","partyBName","partyCName","facilitator","minB","minC","compromise"].forEach(id=>{if(d[id]!=null)byId(id).value=d[id]});
+    STATE=d.state||{bCommitted:false,cCommitted:false};
+    renderInventory();
+    Object.keys(d.answers||{}).forEach(k=>{const a=d.answers[k];if(a.B!=null)byId("b"+k).value=a.B;if(a.C!=null)byId("c"+k).value=a.C});
+    if(STATE.bCommitted||STATE.cCommitted)renderInventory(),Object.keys(d.answers||{}).forEach(k=>{const a=d.answers[k];if(a.B!=null)byId("b"+k).value=a.B;if(a.C!=null)byId("c"+k).value=a.C});
+    alert("Compatibility data imported.");
+  }catch(e){alert("Import failed. Check the data block.")}
+}
+function clearParticipantData(){
+  if(!confirm("Clear Party B and Party C responses? Party A's embedded baseline will remain."))return;
+  STATE={bCommitted:false,cCommitted:false}; renderInventory();
+  ["partyBName","partyCName","minB","minC","compromise"].forEach(id=>{if(byId(id))byId(id).value=""});
+  byId("metrics").innerHTML='Party B must answer and commit, then Party C must review and commit before scoring.';
+  byId("levelResults").innerHTML="";byId("drivers").innerHTML="";byId("interpretation").textContent="No compatibility score calculated yet.";byId("dataBlock").value="";
+}
+function clearAll(){clearParticipantData()}
+MODEL.forEach((n,i)=>n.Item=i+1);
+byId("partyAName").value="Locked baseline";
+byId("partyAName").readOnly=true;
+renderInventory();
+</script>
+</body>
+</html>
