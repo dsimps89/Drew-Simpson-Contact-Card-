@@ -69,7 +69,7 @@ input[type=text],textarea,select{border:0;border-bottom:1px solid #111;backgroun
   <button onclick="createDataBlock()">Create Data Block</button>
   <button onclick="importData()">Import Data</button>
   <button onclick="clearParticipantData()">Clear B/C</button>
-  <span>Relationship compatibility test · 60 questions · Locked Party A baseline</span>
+  <span>Relationship compatibility test · 60 questions · Locked Party A baseline · v1.2</span>
 </div>
 
 <section class="page marks">
@@ -80,7 +80,7 @@ input[type=text],textarea,select{border:0;border-bottom:1px solid #111;backgroun
       <div class="subtitle">LOCKED BASELINE · INDEPENDENT PARTNER RESPONSE · THIRD-PARTY REVIEW</div>
       <div class="subtitle">LEVELS: BOUNDARIES · INTIMACY · SHARED LIFE · SUPPORT · VALUES</div>
     </div>
-    <div class="idbox">TEST ID<div class="cells"><span class="cell"></span><span class="cell"></span><span class="cell"></span><span class="cell"></span><span class="cell"></span><span class="cell"></span></div>FORM RC-60 / 1.0<br>PAGE 1 / 4</div>
+    <div class="idbox">TEST ID<div class="cells"><span class="cell"></span><span class="cell"></span><span class="cell"></span><span class="cell"></span><span class="cell"></span><span class="cell"></span></div>FORM RC-60 / 1.2<br>PAGE 1 / 4</div>
   </div>
   <div class="bar">PARTICIPANT IDENTIFICATION AND RELATIONSHIP CONTEXT</div>
   <div class="grid2">
@@ -130,7 +130,7 @@ input[type=text],textarea,select{border:0;border-bottom:1px solid #111;backgroun
     <div class="scalehead"><b>NODE</b><b>A</b><b>B</b><b>C</b><b>IMP.</b></div>
     <div id="level3"></div>
   </div>
-  <div class="footer"><b>FORM RC-60 / 1.0</b><span>PAGE 2 / 4</span></div>
+  <div class="footer"><b>FORM RC-60 / 1.2</b><span>PAGE 2 / 4</span></div>
 </section>
 
 <section class="page marks">
@@ -155,7 +155,7 @@ input[type=text],textarea,select{border:0;border-bottom:1px solid #111;backgroun
     </div>
     <div class="row">Discussion point / safeguard / compromise:<input id="compromise" type="text"></div>
   </div>
-  <div class="footer"><b>FORM RC-60 / 1.0</b><span>PAGE 3 / 4</span></div>
+  <div class="footer"><b>FORM RC-60 / 1.2</b><span>PAGE 3 / 4</span></div>
 </section>
 
 <section class="page marks" id="results-page">
@@ -181,7 +181,7 @@ input[type=text],textarea,select{border:0;border-bottom:1px solid #111;backgroun
     <h2>N. PORTABLE DATA BLOCK</h2>
     <textarea id="dataBlock" class="codebox" placeholder="Use Create Data Block, or paste a saved block here and press Import Data."></textarea>
   </div>
-  <div class="footer"><b>FORM RC-60 / 1.0</b><span>PAGE 4 / 4</span></div>
+  <div class="footer"><b>FORM RC-60 / 1.2</b><span>PAGE 4 / 4</span></div>
 </section>
 
 <script>
@@ -215,90 +215,244 @@ function renderInventory(){
 function val(id){const e=byId(id); if(!e)return null; const v=e.value; return v===""?null:Number(v)}
 function mean(arr){const x=arr.filter(v=>v!=null);return x.length?x.reduce((a,b)=>a+b,0)/x.length:null}
 function fmt(v){return v==null?"—":v.toFixed(2)}
-function similarity(a,b){if(a==null||b==null)return null;return Math.max(0,100-Math.abs(a-b)*25)}
+function similarity(a,b){
+  if(a==null||b==null)return null;
+  return Math.max(0,100-Math.abs(Number(a)-Number(b))*25);
+}
+function capturePartyB(){
+  const out={};
+  MODEL.forEach((n,i)=>{const v=val("b"+i);if(v!=null)out[i]=v});
+  return out;
+}
+function capturePartyC(){
+  const out={};
+  MODEL.forEach((n,i)=>{const v=val("c"+i);if(v!=null)out[i]=v});
+  return out;
+}
+function lockParty(prefix){
+  MODEL.forEach((n,i)=>{const el=byId(prefix+i);if(el)el.disabled=true});
+}
+function unlockParty(prefix){
+  MODEL.forEach((n,i)=>{const el=byId(prefix+i);if(el)el.disabled=false});
+}
+function getB(i){
+  const v=STATE.bAnswers[i];
+  return v==null?val("b"+i):Number(v);
+}
+function getC(i){
+  const v=STATE.cAnswers[i];
+  return v==null?val("c"+i):Number(v);
+}
+function reviewerPercent(c){
+  if(c==null)return null;
+  return (Number(c)-1)*25;
+}
 
 function commitPartyB(){
-  const missing=MODEL.filter((n,i)=>val("b"+i)==null).length;
+  const captured=capturePartyB();
+  const missing=MODEL.length-Object.keys(captured).length;
   if(missing){alert(`Party B still has ${missing} unanswered question(s).`);return}
   if(!confirm("Commit and lock Party B answers? Party C review will then be enabled."))return;
-  STATE.bAnswers={};
-  MODEL.forEach((n,i)=>STATE.bAnswers[i]=val("b"+i));
+  STATE.bAnswers=captured;
   STATE.bCommitted=true;
-  renderInventory();
+  lockParty("b");
+  unlockParty("c");
   alert("Party B answers committed and locked. Party C review is now enabled.");
 }
 function commitReviewer(){
   if(!STATE.bCommitted){alert("Commit Party B first.");return}
-  const missing=MODEL.filter((n,i)=>val("c"+i)==null).length;
+  const captured=capturePartyC();
+  const missing=MODEL.length-Object.keys(captured).length;
   if(missing){alert(`Party C still has ${missing} unreviewed question(s).`);return}
-  if(!confirm("Commit and lock Party C review?"))return;
-  STATE.cAnswers={};
-  MODEL.forEach((n,i)=>STATE.cAnswers[i]=val("c"+i));
+  if(!confirm("Commit Party C review and calculate the compatibility report?"))return;
+  STATE.cAnswers=captured;
   STATE.cCommitted=true;
-  renderInventory();
-  alert("Party C review committed. The assessment can now be scored.");
+  lockParty("c");
+  scoreAssessment();
 }
 function scoreAssessment(){
-  if(!STATE.bCommitted||!STATE.cCommitted){alert("Party B and Party C must both be committed before scoring.");return}
-  const records=[]; const levelStats={}; let weightSum=0, matchSum=0, reviewSum=0;
+  if(!STATE.bCommitted){
+    const captured=capturePartyB();
+    if(Object.keys(captured).length===MODEL.length){STATE.bAnswers=captured}
+  }
+  if(!STATE.cCommitted){
+    const captured=capturePartyC();
+    if(Object.keys(captured).length===MODEL.length){STATE.cAnswers=captured}
+  }
+
+  const bCount=Object.keys(STATE.bAnswers||{}).length;
+  const cCount=Object.keys(STATE.cAnswers||{}).length;
+  if(bCount!==60||cCount!==60){
+    alert(`Cannot score yet. Stored answers: Party B ${bCount}/60, Party C ${cCount}/60.`);
+    return;
+  }
+
+  const records=[];
+  const levelStats={};
+  let weightSum=0,matchSum=0,reviewSum=0;
+
   MODEL.forEach((n,i)=>{
-    const A=n.ABaseline,B=STATE.bAnswers[i]??val("b"+i),C=STATE.cAnswers[i]??val("c"+i); if(B==null||C==null)return; const match=similarity(A,B),review=(C-1)*25,final=.8*match+.2*review,gap=Math.abs(A-B);
-    weightSum+=n.Importance;matchSum+=match*n.Importance;reviewSum+=review*n.Importance;
-    records.push({node:n.Node,question:n.Question,level:n.Level,theme:n.LevelTheme,A,B,C,match,review,final,gap,weight:n.Importance});
-    levelStats[n.Level]??={w:0,match:0,review:0,final:0,gaps:0};
-    let s=levelStats[n.Level];s.w+=n.Importance;s.match+=match*n.Importance;s.review+=review*n.Importance;s.final+=final*n.Importance;s.gaps+=gap;
+    const A=Number(n.ABaseline);
+    const B=getB(i);
+    const C=getC(i);
+    const match=similarity(A,B);
+    const review=reviewerPercent(C);
+    const combined=.80*match+.20*review;
+    const gap=Math.abs(A-B);
+
+    weightSum+=n.Importance;
+    matchSum+=match*n.Importance;
+    reviewSum+=review*n.Importance;
+
+    const r={
+      node:n.Node,question:n.Question,scale:n.Scale,
+      level:n.Level,theme:n.LevelTheme,
+      A,B,C,match,review,combined,gap,weight:n.Importance
+    };
+    records.push(r);
+
+    levelStats[n.Level]??={w:0,match:0,review:0,combined:0,gap:0,count:0};
+    const s=levelStats[n.Level];
+    s.w+=n.Importance;
+    s.match+=match*n.Importance;
+    s.review+=review*n.Importance;
+    s.combined+=combined*n.Importance;
+    s.gap+=gap;
+    s.count++;
   });
-  if(weightSum===0){alert("No committed answers were available to score. Please recommit Party B and Party C.");return}
-  const ab=matchSum/weightSum, cReview=reviewSum/weightSum, overall=.8*ab+.2*cReview;
-  const hard=records.filter(r=>r.weight===3&&r.gap>=3);
-  const status=overall>=80?"Very strong overall alignment":overall>=70?"Strong overall alignment":overall>=60?"Moderate compatibility with meaningful differences":overall>=50?"Mixed compatibility requiring substantial discussion":"Low compatibility across important preferences";
+
+  const ab=matchSum/weightSum;
+  const cReview=reviewSum/weightSum;
+  const overall=.80*ab+.20*cReview;
+
+  const exact=records.filter(r=>r.gap===0).length;
+  const close=records.filter(r=>r.gap===1).length;
+  const meaningful=records.filter(r=>r.gap===2).length;
+  const major=records.filter(r=>r.gap>=3).length;
+  const coreMajor=records.filter(r=>r.weight===3&&r.gap>=3).length;
+  const reviewerConcerns=records.filter(r=>r.C<=2).length;
+
+  const status=
+    overall>=85?"Exceptional alignment":
+    overall>=75?"Strong compatibility":
+    overall>=65?"Generally compatible with discussion areas":
+    overall>=55?"Mixed compatibility":
+    overall>=45?"Significant compatibility concerns":
+    "Low compatibility across important preferences";
+
   const cls=overall>=75?"good":overall>=55?"mid":"poor";
+
   const metrics=[
     ["Party A baseline","60/60","Embedded and locked before participant use."],
-    ["Party B completion","60/60",esc(byId("partyBName").value||"Partner / date")+" committed"],
-    ["Party C review","60/60",esc(byId("partyCName").value||"Independent reviewer")+" committed"],
+    ["Party B captured",`${bCount}/60`,esc(byId("partyBName").value||"Partner / date")+" answers used in scoring."],
+    ["Party C captured",`${cCount}/60`,esc(byId("partyCName").value||"Independent reviewer")+" ratings used in scoring."],
     ["A ↔ B preference match",`${Math.round(ab)}%`,"Importance-weighted direct preference alignment."],
-    ["Reviewer workability",`${Math.round(cReview)}%`,"Party C's independent 1–5 review converted to percent."],
+    ["Reviewer workability",`${Math.round(cReview)}%`,"Party C: 1=0%, 2=25%, 3=50%, 4=75%, 5=100%."],
     ["Overall compatibility",`${Math.round(overall)}%`,status],
-    ["High-priority hard gaps",hard.length,"Importance 3 with a three- or four-point A/B difference."],
-    ["Scoring mix","80 / 20","80% A↔B match · 20% Party C review."]
+    ["Exact / close matches",`${exact} / ${close}`,"Exact answers / one-point differences."],
+    ["Major core gaps",coreMajor,"Importance 3 with a three- or four-point difference."]
   ];
   byId("metrics").innerHTML=metrics.map((m,i)=>`<div class="metric"><b>${m[0]}</b><span class="pill ${i===5?cls:""}">${m[1]}</span><span>${m[2]}</span></div>`).join("");
-  byId("levelResults").innerHTML=`<table class="smalltable"><thead><tr><th>Level</th><th>Theme</th><th>A↔B Match</th><th>C Review</th><th>Combined</th><th>Mean Gap</th></tr></thead><tbody>${
-    Object.keys(levelStats).map(k=>{const s=levelStats[k];return `<tr><td>${k}</td><td>${esc(MODEL.find(n=>n.Level==k).LevelTheme)}</td><td>${Math.round(s.match/s.w)}%</td><td>${Math.round(s.review/s.w)}%</td><td>${Math.round(s.final/s.w)}%</td><td>${(s.gaps/12).toFixed(2)}</td></tr>`}).join("")
+
+  const orderedLevels=Object.keys(levelStats).sort((a,b)=>Number(a)-Number(b));
+  byId("levelResults").innerHTML=`<table class="smalltable"><thead><tr>
+    <th>Level</th><th>Theme</th><th>A↔B Match</th><th>C Review</th><th>Combined</th><th>Mean Gap</th>
+  </tr></thead><tbody>${
+    orderedLevels.map(k=>{
+      const s=levelStats[k];
+      return `<tr>
+        <td>${k}</td>
+        <td>${esc(MODEL.find(n=>n.Level==k).LevelTheme)}</td>
+        <td>${Math.round(s.match/s.w)}%</td>
+        <td>${Math.round(s.review/s.w)}%</td>
+        <td>${Math.round(s.combined/s.w)}%</td>
+        <td>${(s.gap/s.count).toFixed(2)}</td>
+      </tr>`;
+    }).join("")
   }</tbody></table>`;
-  const align=records.filter(r=>r.match>=75).sort((a,b)=>(b.weight-a.weight)||(b.match-a.match)).slice(0,8);
-  const gaps=records.filter(r=>r.gap>=2).sort((a,b)=>(b.weight-a.weight)||(b.gap-a.gap)).slice(0,8);
-  const concerns=records.filter(r=>r.C<=2).sort((a,b)=>(a.C-b.C)||(b.weight-a.weight)).slice(0,8);
+
+  const strongest=records
+    .filter(r=>r.match>=75)
+    .sort((a,b)=>(b.weight-a.weight)||(b.match-a.match)||(b.C-a.C))
+    .slice(0,8);
+
+  const gaps=records
+    .filter(r=>r.gap>=2)
+    .sort((a,b)=>(b.weight-a.weight)||(b.gap-a.gap)||(a.C-b.C))
+    .slice(0,8);
+
+  const concerns=records
+    .filter(r=>r.C<=2)
+    .sort((a,b)=>(a.C-b.C)||(b.weight-a.weight)||(b.gap-a.gap))
+    .slice(0,8);
+
   byId("drivers").innerHTML=`<div class="driverGrid">
-    <div class="driverCard"><h3>Strongest alignments</h3><ul>${align.length?align.map(r=>`<li>${esc(r.node)} (${Math.round(r.match)}%)</li>`).join(""):"<li>None</li>"}</ul></div>
-    <div class="driverCard"><h3>Important A/B gaps</h3><ul>${gaps.length?gaps.map(r=>`<li>${esc(r.node)} (A ${r.A} / B ${r.B})</li>`).join(""):"<li>None</li>"}</ul></div>
-    <div class="driverCard"><h3>Reviewer concerns</h3><ul>${concerns.length?concerns.map(r=>`<li>${esc(r.node)} (C ${r.C}/5)</li>`).join(""):"<li>None</li>"}</ul></div>
+    <div class="driverCard"><h3>Strongest alignments</h3><ul>${
+      strongest.length?strongest.map(r=>`<li>${esc(r.node)} — A ${r.A}, B ${r.B} (${Math.round(r.match)}%)</li>`).join(""):"<li>None</li>"
+    }</ul></div>
+    <div class="driverCard"><h3>Important A/B gaps</h3><ul>${
+      gaps.length?gaps.map(r=>`<li>${esc(r.node)} — A ${r.A}, B ${r.B}, gap ${r.gap}</li>`).join(""):"<li>None</li>"
+    }</ul></div>
+    <div class="driverCard"><h3>Reviewer concerns</h3><ul>${
+      concerns.length?concerns.map(r=>`<li>${esc(r.node)} — C ${r.C}/5</li>`).join(""):"<li>None</li>"
+    }</ul></div>
   </div>`;
-  const highMatch=records.filter(r=>r.weight>=2&&r.match>=75).length;
-  const moderateGap=records.filter(r=>r.weight>=2&&r.gap===2).length;
-  const majorGap=records.filter(r=>r.weight>=2&&r.gap>=3).length;
-  const reviewerRed=records.filter(r=>r.C<=2).length;
-  const strongestCategory=Object.keys(levelStats).map(k=>({k,score:levelStats[k].final/levelStats[k].w})).sort((a,b)=>b.score-a.score)[0];
-  const weakestCategory=Object.keys(levelStats).map(k=>({k,score:levelStats[k].final/levelStats[k].w})).sort((a,b)=>a.score-b.score)[0];
-  const categoryName=k=>MODEL.find(n=>n.Level==k).LevelTheme;
-  let narrative="";
-  if(overall>=80) narrative=`The pair shows broad alignment across the baseline, with ${highMatch} important questions matching closely. Remaining differences are more likely to be negotiation points than structural incompatibilities.`;
-  else if(overall>=70) narrative=`The pair is generally well aligned, but there are ${moderateGap+majorGap} important questions with meaningful differences. Those differences should be discussed explicitly rather than assumed to resolve themselves.`;
-  else if(overall>=60) narrative=`There is a workable core of compatibility, alongside several areas that could create recurring friction. The assessment found ${majorGap} major important gaps and ${reviewerRed} areas the reviewer rated as concerning.`;
-  else if(overall>=50) narrative=`Compatibility is mixed. Some preferences align, but the number or importance of the disagreements is large enough that the relationship may require substantial compromise. Pay particular attention to whether either person would feel they are repeatedly giving up a core preference.`;
-  else narrative=`The responses show substantial differences across important preferences. This does not automatically determine the relationship outcome, but it indicates that several expectations may conflict unless both people genuinely want and can sustain the necessary compromises.`;
+
+  const categoryRows=orderedLevels.map(k=>{
+    const s=levelStats[k];
+    return {
+      level:k,
+      name:MODEL.find(n=>n.Level==k).LevelTheme,
+      score:s.combined/s.w,
+      match:s.match/s.w,
+      review:s.review/s.w
+    };
+  }).sort((a,b)=>b.score-a.score);
+
+  const strongestCat=categoryRows[0];
+  const weakestCat=categoryRows[categoryRows.length-1];
+
+  const topDiscussion=records
+    .filter(r=>r.weight>=2 && (r.gap>=2 || r.C<=2))
+    .sort((a,b)=>{
+      const riskA=(b.weight*20+b.gap*15+(3-b.C)*10);
+      const riskB=(a.weight*20+a.gap*15+(3-a.C)*10);
+      return riskA-riskB;
+    })
+    .slice(0,5);
+
+  let narrative;
+  if(overall>=85){
+    narrative=`The two baselines are highly aligned. ${exact+close} of 60 answers are exact or within one point, and Party C generally sees the differences as workable. The main task is maintaining the areas that already fit well.`;
+  }else if(overall>=75){
+    narrative=`There is strong overall compatibility. Most important preferences are close, but the assessment still identifies ${meaningful+major} questions with two-point-or-larger differences. Those are worth discussing before assumptions become expectations.`;
+  }else if(overall>=65){
+    narrative=`The relationship shows a solid compatible core with several meaningful differences. There are ${major} major preference gaps and ${reviewerConcerns} reviewer concerns. Compatibility may depend more on how these differences are negotiated than on the overall percentage alone.`;
+  }else if(overall>=55){
+    narrative=`The results are mixed: there are real areas of fit, but also enough important differences to create recurring friction. The assessment found ${coreMajor} major gaps on core priorities and ${reviewerConcerns} items Party C rated 1 or 2.`;
+  }else if(overall>=45){
+    narrative=`The assessment shows significant compatibility concerns. Several important expectations differ substantially, and the reviewer does not consider all of them easily workable. A relationship could still function, but only if both people genuinely accept the compromises involved.`;
+  }else{
+    narrative=`The responses differ substantially across important relationship expectations. The numerical result does not decide the relationship, but it indicates that multiple core preferences may be pulling in different directions and should not be minimized.`;
+  }
+
+  const discussionHtml=topDiscussion.length
+    ? `<ol>${topDiscussion.map(r=>`<li><b>${esc(r.node)}:</b> Party A chose ${r.A}, Party B chose ${r.B}, and Party C rated workability ${r.C}/5. ${r.gap>=3?"This is a large preference gap.":r.gap===2?"This is a meaningful preference difference.":"The reviewer expressed concern despite a relatively small direct gap."}</li>`).join("")}</ol>`
+    : `<p>No high-priority discussion items were flagged.</p>`;
+
   byId("interpretation").innerHTML=`
     <p><b>Overall finding:</b> <span class="pill ${cls}">${status}</span></p>
     <p>${narrative}</p>
-    <p>The importance-weighted direct Party A ↔ Party B match is <b>${Math.round(ab)}%</b>. Party C's workability review is <b>${Math.round(cReview)}%</b>. Combined compatibility is <b>${Math.round(overall)}%</b>.</p>
-    <p><b>Strongest area:</b> ${esc(categoryName(strongestCategory.k))} (${Math.round(strongestCategory.score)}%). <b>Area needing the most discussion:</b> ${esc(categoryName(weakestCategory.k))} (${Math.round(weakestCategory.score)}%).</p>
-    <p>There are <b>${majorGap}</b> major gaps on important/core questions and <b>${reviewerRed}</b> questions Party C rated as a major or significant concern. Use those specific items as the discussion agenda.</p>
-    <p><b>Contact boundary:</b> If either person explicitly asks the other to stop calling or texting, that request should be respected regardless of the score.</p>
+    <p><b>Score breakdown:</b> Party A ↔ Party B direct match is <b>${Math.round(ab)}%</b>; Party C workability is <b>${Math.round(cReview)}%</b>; combined compatibility is <b>${Math.round(overall)}%</b>.</p>
+    <p><b>Best-fitting area:</b> ${esc(strongestCat.name)} (${Math.round(strongestCat.score)}%). <b>Area needing the most discussion:</b> ${esc(weakestCat.name)} (${Math.round(weakestCat.score)}%).</p>
+    <p><b>Response pattern:</b> ${exact} exact matches, ${close} one-point differences, ${meaningful} two-point differences, and ${major} major three/four-point gaps. ${reviewerConcerns} items received a Party C rating of 1 or 2.</p>
+    <p><b>Priority discussion items:</b></p>
+    ${discussionHtml}
+    <p><b>Contact boundary:</b> If either person explicitly asks the other to stop calling or texting, that request should be respected regardless of the compatibility score.</p>
     <p><b>Interpretation limit:</b> This is a structured compatibility aid, not a clinical, legal, or scientific diagnostic.</p>`;
+
   location.hash="results-page";
-}
-function collect(){
+}function collect(){
   const answers={};
   MODEL.forEach((n,i)=>answers[i]={A:n.ABaseline,B:(STATE.bAnswers[i]??val("b"+i)),C:(STATE.cAnswers[i]??val("c"+i)),importance:n.Importance});
   return {
@@ -336,10 +490,18 @@ function importData(){
 }
 function clearParticipantData(){
   if(!confirm("Clear Party B and Party C responses? Party A's embedded baseline will remain."))return;
-  STATE={bCommitted:false,cCommitted:false,bAnswers:{},cAnswers:{}}; renderInventory();
+  STATE={bCommitted:false,cCommitted:false,bAnswers:{},cAnswers:{}};
+  MODEL.forEach((n,i)=>{
+    const b=byId("b"+i),c=byId("c"+i);
+    if(b){b.value="";b.disabled=false}
+    if(c){c.value="";c.disabled=true}
+  });
   ["partyBName","partyCName","minB","minC","compromise"].forEach(id=>{if(byId(id))byId(id).value=""});
   byId("metrics").innerHTML='Party B must answer and commit, then Party C must review and commit before scoring.';
-  byId("levelResults").innerHTML="";byId("drivers").innerHTML="";byId("interpretation").textContent="No compatibility score calculated yet.";byId("dataBlock").value="";
+  byId("levelResults").innerHTML="";
+  byId("drivers").innerHTML="";
+  byId("interpretation").textContent="No compatibility score calculated yet.";
+  byId("dataBlock").value="";
 }
 function clearAll(){clearParticipantData()}
 MODEL.forEach((n,i)=>n.Item=i+1);
